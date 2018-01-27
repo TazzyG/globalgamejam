@@ -4,9 +4,12 @@ require_relative 'defstruct'
 class GameWindow < Gosu::Window
 	def initialize(*args)
 		super
+		@images = {
+			background: Gosu::Image.new(self, 'images/ocean.jpg', true),
+			foreground: Gosu::Image.new(self, 'images/fish.png', false),
+		}
 		@scroll_x = 0
-		@background = Gosu::Image.new(self, 'images/ocean.jpg', false)
-		@foreground = Gosu::Image.new(self, 'images/fish.png', true)
+		
 	end
 
 	def button_down(button)
@@ -15,17 +18,17 @@ class GameWindow < Gosu::Window
 
   def update
   	@scroll_x += 3
-  	if @scroll_x > @foreground.width
+  	if @scroll_x > @images[:foreground].width
   		@scroll_x = 0
   	end
   end
 
 	def draw
-		@background.draw(0, 0, 0)
-		@foreground.draw(@scroll_x, 290, 0)
-		@foreground.draw(@scroll_x - @foreground.width, 290, 0)
+		@images[:background].draw(0, 0, 0)
+		@images[:foreground].draw(@scroll_x, 290, 0)
+		@images[:foreground].draw(@scroll_x - @images[:foreground].width, 290, 0)
 	end
 end
 
-window = GameWindow.new(1800, 1080, false)
+window = GameWindow.new(1920, 1080, false)
 window.show
