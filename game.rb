@@ -9,6 +9,7 @@ GameState = DefStruct.new{{
 	scroll_x: 0,
 	player_pos: Vec[0,0],
 	player_vel: Vec[0,0],
+	obstacles: [], #array of Vec
 	}}
 
 class GameWindow < Gosu::Window
@@ -16,7 +17,7 @@ class GameWindow < Gosu::Window
 		super
 		@images = {
 			background: Gosu::Image.new(self, 'images/ocean.jpg', true),
-			foreground: Gosu::Image.new(self, 'images/fish.png', false),
+			foreground: Gosu::Image.new(self, 'images/foreground.png', false),
 			player: Gosu::Image.new(self, 'images/nemo_forward.png', false),
 			obstacle: Gosu::Image.new(self, 'images/jellyfish.png', false),
 		}
@@ -46,8 +47,8 @@ class GameWindow < Gosu::Window
 
 	def draw
 		@images[:background].draw(0, 0, 0)
-		@images[:foreground].draw(-@state.scroll_x, 290, 0)
-		@images[:foreground].draw(-@state.scroll_x + @images[:foreground].width, 290, 0)
+		@images[:foreground].draw(-@state.scroll_x, 840, 0)
+		@images[:foreground].draw(-@state.scroll_x + @images[:foreground].width, 840, 0)
 		@images[:player].draw(50, @state.player_pos.y, 0)
 		@images[:obstacle].draw(200, 800, 0)
 		@images[:obstacle].draw(200, 100,0)
