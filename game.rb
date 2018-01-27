@@ -23,6 +23,8 @@ class GameWindow < Gosu::Window
 			submarine: Gosu::Image.new(self, 'images/submarine.png', false),
 			player: Gosu::Image.new(self, 'images/nemo_forward.png', false),
 			obstacle: Gosu::Image.new(self, 'images/jellyfish.png', false),
+			golf: Gosu::Image.new(self, 'images/golf.jpg', false),
+			trump: Gosu::Image.new(self, 'images/trump.png', false),
 		}
 
 		@state = GameState.new
