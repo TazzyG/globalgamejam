@@ -18,6 +18,9 @@ class GameWindow < Gosu::Window
 		@images = {
 			background: Gosu::Image.new(self, 'images/ocean.jpg', true),
 			foreground: Gosu::Image.new(self, 'images/foreground.png', false),
+			fish_1: Gosu::Image.new(self, 'images/fish.png', false),
+			angel: Gosu::Image.new(self, 'images/angel.png', false),
+			submarine: Gosu::Image.new(self, 'images/submarine.png', false),
 			player: Gosu::Image.new(self, 'images/nemo_forward.png', false),
 			obstacle: Gosu::Image.new(self, 'images/jellyfish.png', false),
 		}
@@ -49,6 +52,10 @@ class GameWindow < Gosu::Window
 		@images[:background].draw(0, 0, 0)
 		@images[:foreground].draw(-@state.scroll_x, 840, 0)
 		@images[:foreground].draw(-@state.scroll_x + @images[:foreground].width, 840, 0)
+		@images[:fish_1].draw(@state.scroll_x, 290, 0)
+		@images[:fish_1].draw(@state.scroll_x - @images[:fish_1].width, 290, 0)
+		@images[:angel].draw(@state.scroll_x, 210, 0)
+		@images[:submarine].draw(@state.scroll_x - @images[:submarine].width, 510, 0)
 		@images[:player].draw(50, @state.player_pos.y, 0)
 		@images[:obstacle].draw(200, 800, 0)
 		@images[:obstacle].draw(200, 100,0)
