@@ -4,27 +4,38 @@ require_relative 'vector'
 
 GRAVITY = Vec[0, 50] # pixels/s^2
 JUMP_VEL = Vec[0, -50]
+OBSTACLE_SPEED = 200 # pixels/s
+OBSTACLE_SPAWN_INTERVAL = 2 #seconds
+OBSTACLE_GAP = 100 # pixels
+
+Rect = DefStruct.new{{
+	pos: Vec[0, 0], #x, y
+	size: Vec[0, 0], # width, height
+
+	#rotation, maybe later
+	}}
 
 GameState = DefStruct.new{{ 
 	scroll_x: 0,
-	player_pos: Vec[0,0],
+	player_pos: Vec[20,0],
 	player_vel: Vec[0,0],
-	obstacles: [], #array of Vec
+	obstacles: [], # array of Obstacles
+	obstacle_countdown: OBSTACLE_SPAWN_INTERVAL,
 	}}
 
 class GameWindow < Gosu::Window
 	def initialize(*args)
 		super
 		@images = {
-			background: Gosu::Image.new(self, 'images/ocean.jpg', true),
-			foreground: Gosu::Image.new(self, 'images/foreground.png', false),
-			fish_1: Gosu::Image.new(self, 'images/fish.png', false),
-			angel: Gosu::Image.new(self, 'images/angel.png', false),
-			submarine: Gosu::Image.new(self, 'images/submarine.png', false),
+			background: Gosu::Image.new(self, 'images/ocean.jpg', false),
+			foreground: Gosu::Image.new(self, 'images/foreground.png', true),
+			# fish_1: Gosu::Image.new(self, 'images/fish.png', false),
+			# angel: Gosu::Image.new(self, 'images/angel.png', false),
+			# submarine: Gosu::Image.new(self, 'images/submarine.png', false),
 			player: Gosu::Image.new(self, 'images/nemo_forward.png', false),
 			obstacle: Gosu::Image.new(self, 'images/jellyfish.png', false),
-			golf: Gosu::Image.new(self, 'images/golf.jpg', false),
-			trump: Gosu::Image.new(self, 'images/trump.png', false),
+			# golf: Gosu::Image.new(self, 'images/golf.jpg', false),
+			# trump: Gosu::Image.new(self, 'images/trump.png', false),
 		}
 
 		@state = GameState.new
@@ -32,47 +43,117 @@ class GameWindow < Gosu::Window
 	end
 
 	def button_down(button)
-		case button
-		when Gosu::KbEscape then close
- 		when Gosu::KbSpace then @state.player_vel.set!(JUMP_VEL)
- 		when Gosu::KbO then spawn_obstacle
- 		end
+    case button
+    when Gosu::KbEscape then close
+    when Gosu::KbSpace then @state.player_vel.set!(JUMP_VEL)
+    end
   end
 
   def spawn_obstacle
-  	@state.obstacles << Vec[width, 200]
+    # @state.obstacles << Vec[width, rand(120..350)]
+    @state.obstacles << Vec[width, rand(150..420)]
   end
 
   def update
-  	@state.scroll_x += 3
+  	dt = update_interval / 1000.0
+
+  	@state.scroll_x += dt*OBSTACLE_SPEED*0.5
   	if @state.scroll_x > @images[:foreground].width
   		@state.scroll_x = 0
   	end
 
-  	dt = update_interval / 1000.0
+  	
 
   	@state.player_vel += dt*GRAVITY
   	@state.player_pos += dt*@state.player_vel 
 
+  	@state.obstacle_countdown -= dt
+    if @state.obstacle_countdown <= 0
+      spawn_obstacle
+      @state.obstacle_countdown += OBSTACLE_SPAWN_INTERVAL
+    end
+
   	@state.obstacles.each do |obst|
-  		obst.x -= 3
-  	end
+      obst.x -= dt*OBSTACLE_SPEED
+    end
   end
 
 	def draw
 		@images[:background].draw(0, 0, 0)
-		@images[:foreground].draw(-@state.scroll_x, 840, 0)
-		@images[:foreground].draw(-@state.scroll_x + @images[:foreground].width, 840, 0)
-		@images[:fish_1].draw(@state.scroll_x, 290, 0)
-		@images[:fish_1].draw(@state.scroll_x - @images[:fish_1].width, 290, 0)
-		@images[:angel].draw(@state.scroll_x, 210, 0)
-		@images[:submarine].draw(@state.scroll_x - @images[:submarine].width, 510, 0)
-		@images[:player].draw(50, @state.player_pos.y, 0)
+		@images[:foreground].draw(-@state.scroll_x, 0, 0)
+		@images[:foreground].draw(-@state.scroll_x + @images[:foreground].width, 0, 0)
+		# @images[:fish_1].draw(@state.scroll_x, 290, 0)
+		# @images[:fish_1].draw(@state.scroll_x - @images[:fish_1].width, 290, 0)
+		# @images[:angel].draw(@state.scroll_x, 210, 0)
+		# @images[:submarine].draw(@state.scroll_x - @images[:submarine].width, 510, 0)
+		
 		@state.obstacles.each do |obst|
-			@images[:obstacle].draw(obst.x, -600, 0)
-			@images[:obstacle].draw(obst.x, -height - 800, 0)
-		end 
+			
+			# top jelly fish
+      # @images[:obstacle].draw(obst.x,  obst.y - img_y, 0)
+      @images[:obstacle].draw(obst.x,  obst.y, 0)
+      # bottom jelly fish
+
+      # @images[:obstacle].draw(obst.x, -height + img_y + (height + obst.y + OBSTACLE_GAP), 0)
+     	# scale(1, -1) do
+				# @images[:obstacle].draw(obst.x, -height + img_y + (height + obst.y + OBSTACLE_GAP), 0)
+					@images[:obstacle].draw(obst.x, -height  + (height + obst.y + OBSTACLE_GAP), 0)
+			# end
+
+    end
+	
+		@images[:player].draw(@state.player_pos.x, @state.player_pos.y, 0)
+
+		debug_draw
 	end
+
+	def debug_draw
+		player_rect = Rect.new(
+			pos: @state.player_pos,
+			size: Vec[@images[:player].width, @images[:player].height]
+			)
+		draw_debug_rect(player_rect)
+
+		img_y = @images[:obstacle].height
+		@state.obstacles.each do |obst|
+
+			top = Rect.new(
+				pos: Vec[obst.x, obst.y - img_y], 
+				size: Vec[@images[:obstacle].width, @images[:obstacle].height ]
+				)
+			draw_debug_rect(top)
+
+
+			bottom = Rect.new(
+				pos: Vec[obst.x, obst.y + OBSTACLE_GAP], 
+				size: Vec[@images[:obstacle].width, @images[:obstacle].height ]
+				)
+			draw_debug_rect(bottom)
+		end
+	end
+
+	def draw_debug_rect(rect)
+		color = Gosu::Color::GREEN
+		x = rect.pos.x
+		y = rect.pos.y
+		w = rect.size.x
+		h = rect.size.y
+		points = [
+			Vec[x,y],
+			Vec[x + w, y],
+			Vec[x + w, y + h],
+			Vec[x, y + h],
+			rect.pos, 
+			rect.pos + Vec[rect.size.x, 0], 
+		]
+
+		points.each_with_index do |p1, idx|
+			p2 = points[(idx + 1) % points.size]
+			draw_line(p1.x, p1.y, color, p2.x, p2.y, color)
+		end
+
+	end
+
 end
 
 window = GameWindow.new(1920, 1080, false)
