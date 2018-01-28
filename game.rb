@@ -2,6 +2,7 @@ require 'gosu'
 require_relative 'defstruct'
 require_relative 'vector'
 
+PLAYER_ANIMATION_FPS = 5 # frames/second
 GRAVITY = Vec[0, 50] # pixels/s^2
 JUMP_VEL = Vec[0, -50] # pixel/s
 OBSTACLE_SPEED = 200 # pixel/s
@@ -34,9 +35,13 @@ GameState = DefStruct.new{{
   player_pos: Vec[20,250],
   player_vel: Vec[0,0],
   player_rotation: 0,
+  player_frame: 0, 
+  player_frame_remaining: 1/PLAYER_ANIMATION_FPS,
   obstacles: [], # array of Obstacle
   obstacle_countdown: OBSTACLE_SPAWN_INTERVAL,
 }}
+
+PLAYER_FRAMES = [:player, :player1]
 
 class GameWindow < Gosu::Window
   def initialize(*args)
@@ -49,7 +54,8 @@ class GameWindow < Gosu::Window
 			# angel: Gosu::Image.new(self, 'images/angel.png', false),
 			# submarine: Gosu::Image.new(self, 'images/submarine.png', false),
 			player: Gosu::Image.new(self, 'images/nemo_forward.png', false),
-			obstacle: Gosu::Image.new(self, 'images/jellyfish3.png', false),
+      player1: Gosu::Image.new(self, 'images/nemo.png', false),
+			obstacle: Gosu::Image.new(self, 'images/yellow.png', false),
 			# golf: Gosu::Image.new(self, 'images/golf.jpg', false),
 			# trump: Gosu::Image.new(self, 'images/trump.png', false),
 		}
@@ -133,7 +139,7 @@ class GameWindow < Gosu::Window
       end
     end
 
-    @images[:player].draw_rot(
+    player_frame.draw_rot(
       @state.player_pos.x, @state.player_pos.y,
       0, @state.player_rotation,
       0, 0)
@@ -142,10 +148,14 @@ class GameWindow < Gosu::Window
     #debug_draw
   end
 
+  def player_frame
+    @images[PLAYER_FRAMES[@state.player_frame]]
+  end
+
   def player_rect
     Rect.new(
       pos: @state.player_pos,
-      size: Vec[@images[:player].width, @images[:player].height]
+      size: Vec[player_frame.width, player_frame.height]
     )
   end
 
