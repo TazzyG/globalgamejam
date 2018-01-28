@@ -72,7 +72,7 @@ GameState = DefStruct.new{{
   # obstacle_countdown: OBSTACLE_SPAWN_INTERVAL,
   particles: [],
   obstacle_timer: Timer::Looping.new(DIFFICULTIES[:medium][:obstacle_spawn_interval]),
-  restart_time: Timer::OneShot.new(RESTART_INTERVAL),
+  restart_timer: Timer::OneShot.new(RESTART_INTERVAL),
 }}
 
 
@@ -103,7 +103,7 @@ class GameWindow < Gosu::Window
     }
     @state = GameState.new
 
-    @music = Gosu::Song.new(self, 'sound/Miaow-07-Bubble.mp3')
+    @music = Gosu::Song.new(self, 'audio/music.mp3')
     @music.play
   end
 
@@ -170,14 +170,15 @@ class GameWindow < Gosu::Window
     end
 
     @state.obstacles.each do |obst|
-      obst.pos.x -= dt*OBSTACLE_SPEED
+      obst.pos.x -= dt*difficulty[:speed]
       if obst.pos.x < @state.player_pos.x && !obst.player_has_crossed && @state.alive
+        @sounds[:score].play(0.8, 0.8 + (@state.score * 0.1))
         @state.score += 1
-        @sounds[:score].play(0.15, 0.8 + @state.score * 0.05)
         obst.player_has_crossed = true
         particle_burst
       end
     end
+
     @state.obstacles.reject! { |obst| obst.pos.x < -@images[:obstacle].width }
 
     if @state.alive && player_is_colliding?
@@ -250,7 +251,7 @@ class GameWindow < Gosu::Window
       @images[:obstacle].draw(obst.pos.x, obst.pos.y - img_y, 0)
       scale(1, -1) do
         # bottom log
-        @images[:obstacle].draw(obst.pos.x, -height - img_y + (height - obst.pos.y - OBSTACLE_GAP), 0)
+        @images[:obstacle].draw(obst.pos.x, - height - img_y + (height - obst.pos.y - obst.gap), 0)
       end
     end
 
@@ -285,7 +286,7 @@ class GameWindow < Gosu::Window
 
     @state.obstacles.flat_map do |obst|
       top = Rect.new(pos: Vec[obst.pos.x, obst.pos.y - img_y], size: obst_size)
-      bottom = Rect.new(pos: Vec[obst.pos.x, obst.pos.y + OBSTACLE_GAP], size: obst_size)
+      bottom = Rect.new( pos: Vec[obst.pos.x, obst.pos.y + obst.gap], size: obst_size)
       [top, bottom]
     end
   end
