@@ -15,17 +15,17 @@ OBSTACLE_PADDING = 150 #px
 DIFFICULTIES = {
   easy: {
     speed: 150, # pixels/s
-    obstacle_gap: 220, # pixels
+    obstacle_gap: 420, # pixels
     obstacle_spawn_interval: 2.0, # secs
   },
   medium: {
     speed: 200, # pixels/s
-    obstacle_gap: 180, #pixels
+    obstacle_gap: 380, #pixels
     obstacle_spawn_interval: 1.3, #seconds
   },
   hard: {
     speed: 400, # pixels/s
-    obstacle_gap: 160, # pixels
+    obstacle_gap: 260, # pixels
     obstacle_spawn_interval: 1.0, #seconds
   },
 }
@@ -62,7 +62,7 @@ GameState = DefStruct.new{{
   started: false,
   alive: true,
   scroll_x: 0,
-  player_pos: Vec[20,250],
+  player_pos: Vec[150,250],
   player_vel: Vec[0,0],
   player_rotation: 0,
   player_animation: Animation.new(PLAYER_ANIMATION_FPS, PLAYER_FRAMES),
@@ -85,21 +85,25 @@ class GameWindow < Gosu::Window
     @images = {
 			background: Gosu::Image.new(self, 'images/ocean.jpg', false),
 			foreground: Gosu::Image.new(self, 'images/foreground.png', true),
-			# fish_1: Gosu::Image.new(self, 'images/fish.png', false),
-			# angel: Gosu::Image.new(self, 'images/angel.png', false),
-			# submarine: Gosu::Image.new(self, 'images/submarine.png', false),
 			player: Gosu::Image.new(self, 'images/nemo_forward.png', false),
       player1: Gosu::Image.new(self, 'images/nemo.png', false),
-			obstacle: Gosu::Image.new(self, 'images/yellow.png', false),
+			obstacle: Gosu::Image.new(self, 'images/avatar.png', false),
       particle: Gosu::Image.new(self, 'images/soundwaves.png', false),
+      # golf ball
+      # fish_1: Gosu::Image.new(self, 'images/fish.png', false),
+      # angel: Gosu::Image.new(self, 'images/angel.png', false),
+      # submarine: Gosu::Image.new(self, 'images/submarine.png', false),
 			# golf: Gosu::Image.new(self, 'images/golf.jpg', false),
 			# trump: Gosu::Image.new(self, 'images/trump.png', false),
+
 
 		}
 
     @sounds = {
       flap: Gosu::Sample.new(self, 'audio/bubble.wav'),
       score: Gosu::Sample.new(self, 'audio/score.ogg'),
+      high_score: Gosu::Sample.new(self, 'audio/whale_short.wav'),
+      #death 
     }
     @state = GameState.new
 
@@ -120,8 +124,8 @@ class GameWindow < Gosu::Window
       end
       @state.started = true
     end
-
   end
+
   def set_difficulty(name)
     @state.difficulty = name
     @state.obstacle_timer.interval = DIFFICULTIES[name][:obstacle_spawn_interval]
@@ -172,7 +176,13 @@ class GameWindow < Gosu::Window
     @state.obstacles.each do |obst|
       obst.pos.x -= dt*difficulty[:speed]
       if obst.pos.x < @state.player_pos.x && !obst.player_has_crossed && @state.alive
-        @sounds[:score].play(0.8, 0.8 + (@state.score * 0.1))
+        if @state.score > 5
+          @sounds[:high_score].play(0.8, 0.8)
+        else
+          @sounds[:score].play(0.8, 0.8 + (@state.score * 0.1))
+        end
+          # @sounds[:score].play(0.8, 0.8 + (@state.score * 0.1))
+       
         @state.score += 1
         obst.player_has_crossed = true
         particle_burst
