@@ -16,6 +16,7 @@ Rect = DefStruct.new{{
 	}}
 
 GameState = DefStruct.new{{ 
+	alive: true,
 	scroll_x: 0,
 	player_pos: Vec[20,0],
 	player_vel: Vec[0,0],
@@ -76,6 +77,13 @@ class GameWindow < Gosu::Window
   	@state.obstacles.each do |obst|
       obst.x -= dt*OBSTACLE_SPEED
     end
+  end
+
+  if player_is_colliding? 
+  	@state.alive = false
+  end
+
+  def player_is_colliding
   end
 
 	def draw
