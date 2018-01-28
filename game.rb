@@ -6,7 +6,7 @@ GRAVITY = Vec[0, 50] # pixels/s^2
 JUMP_VEL = Vec[0, -50]
 OBSTACLE_SPEED = 200 # pixels/s
 OBSTACLE_SPAWN_INTERVAL = 2 #seconds
-OBSTACLE_GAP = 100 # pixels
+OBSTACLE_GAP = 300 # pixels
 DEATH_VELOCITY = Vec[50, -500] #pixes/s
 DEATH_ROTATIONAL_VEL = 360 # degrees/s
 
@@ -23,9 +23,10 @@ Rect = DefStruct.new{{
 end
 
 GameState = DefStruct.new{{ 
+	started: false,
 	alive: true,
 	scroll_x: 0,
-	player_pos: Vec[20,0],
+	player_pos: Vec[20, 540],
 	player_vel: Vec[0,0],
 	player_rotation: 0, 
 	obstacles: [], # array of Obstacles
@@ -53,13 +54,10 @@ class GameWindow < Gosu::Window
 	def button_down(button)
     case button
     when Gosu::KbEscape then close
-    when Gosu::KbSpace then @state.player_vel.set!(JUMP_VEL) if @state.alive
+    when Gosu::KbSpace 
+    	@state.player_vel.set!(JUMP_VEL) if @state.alive
+    	@state.started = true
     end
-  end
-
-  def spawn_obstacle
-    # @state.obstacles << Vec[width, rand(120..350)]
-    @state.obstacles << Vec[width, rand(150..420)]
   end
 
   def update
@@ -70,12 +68,14 @@ class GameWindow < Gosu::Window
   		@state.scroll_x = 0
   	end
 
+  	return unless @state.started 
+
   	@state.player_vel += dt*GRAVITY
   	@state.player_pos += dt*@state.player_vel 
 
   	@state.obstacle_countdown -= dt
     if @state.obstacle_countdown <= 0
-      spawn_obstacle
+      @state.obstacles << Vec[width, rand(150..420)]
       @state.obstacle_countdown += OBSTACLE_SPAWN_INTERVAL
     end
 
