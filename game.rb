@@ -4,7 +4,7 @@ require_relative 'vector'
 require_relative 'timer'
 require_relative 'animation'
 
-PLAYER_ANIMATION_FPS = 5.0 # frames/second
+PLAYER_ANIMATION_FPS = 1.0 # frames/second
 GRAVITY = Vec[0, 50] # pixels/s^2
 JUMP_VEL = Vec[0, -50] # pixel/s
 DEATH_VELOCITY = Vec[50, -500] # pixels/s
@@ -15,8 +15,8 @@ OBSTACLE_PADDING = 150 #px
 DIFFICULTIES = {
   easy: {
     speed: 150, # pixels/s
-    obstacle_gap: 420, # pixels
-    obstacle_spawn_interval: 2.0, # secs
+    obstacle_gap: 500, # pixels
+    obstacle_spawn_interval: 3.0, # secs
   },
   medium: {
     speed: 200, # pixels/s
@@ -85,17 +85,16 @@ class GameWindow < Gosu::Window
     @images = {
 			background: Gosu::Image.new(self, 'images/ocean.jpg', false),
 			foreground: Gosu::Image.new(self, 'images/foreground.png', true),
+      trump: Gosu::Image.new(self, 'images/trump.png', false),
 			player: Gosu::Image.new(self, 'images/nemo_forward.png', false),
       player1: Gosu::Image.new(self, 'images/nemo.png', false),
 			obstacle: Gosu::Image.new(self, 'images/avatar.png', false),
       particle: Gosu::Image.new(self, 'images/soundwaves.png', false),
       # golf ball
-      # fish_1: Gosu::Image.new(self, 'images/fish.png', false),
-      # angel: Gosu::Image.new(self, 'images/angel.png', false),
-      # submarine: Gosu::Image.new(self, 'images/submarine.png', false),
-			# golf: Gosu::Image.new(self, 'images/golf.jpg', false),
-			# trump: Gosu::Image.new(self, 'images/trump.png', false),
-
+      fish_1: Gosu::Image.new(self, 'images/fish.png', false),
+      angel: Gosu::Image.new(self, 'images/angel.png', false),
+      submarine: Gosu::Image.new(self, 'images/submarine.png', false),
+      spaceship: Gosu::Image.new(self, 'images/spaceship.png', false),
 
 		}
 
@@ -242,7 +241,9 @@ class GameWindow < Gosu::Window
   end
 
   def draw
+    
     @images[:background].draw(0, 0, 0)
+    
     @state.particles.each do |part|
       @images[:particle].draw_rot(
         part.pos.x, part.pos.y, 0,
@@ -270,8 +271,24 @@ class GameWindow < Gosu::Window
       0, @state.player_rotation,
       0, 0)
 
+    if @state.score == 8
+      @images[:fish_1].draw(-@state.scroll_x, 0, 0)
+      @images[:fish_1].draw(-@state.scroll_x + @images[:fish_1].width, 0, 0)
+    end
+
+    if @state.score > 2
+      @images[:trump].draw(1320, 920, 0)
+    end
+
+    if @state.score > 4
+      @images[:spaceship].draw(1320, 320, 0)
+    end
+
+
+
     @font.draw_rel(@state.score.to_s, width/2.0, 60, 0, 0.5, 0.5)
     @font.draw_rel(@state.difficulty.to_s, width - 10, height - 10, 0, 1.0, 1.0) 
+
     #debug_draw
   end
 
