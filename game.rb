@@ -23,6 +23,7 @@ Rect = DefStruct.new{{
 end
 
 GameState = DefStruct.new{{ 
+	score: 0,
 	started: false,
 	alive: true,
 	scroll_x: 0,
@@ -36,6 +37,7 @@ GameState = DefStruct.new{{
 class GameWindow < Gosu::Window
 	def initialize(*args)
 		super
+		@font = Gosu::Font.new(self, Gosu.default_font_name, 25)
 		@images = {
 			background: Gosu::Image.new(self, 'images/ocean.jpg', false),
 			foreground: Gosu::Image.new(self, 'images/foreground.png', true),
@@ -145,7 +147,10 @@ class GameWindow < Gosu::Window
 			@state.player_pos.x, @state.player_pos.y, 
 			0, @state.player_rotation, 0, 0)
 
+		 @font.draw_rel(@state.score.to_s, width/2.0, 60, 0, 0.5, 0.5) 
+
 		debug_draw
+
 	end
 
 	def player_rect
