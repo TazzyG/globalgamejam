@@ -13,7 +13,12 @@ Rect = DefStruct.new{{
 	size: Vec[0, 0], # width, height
 
 	#rotation, maybe later
-	}}
+	}}.reopen do
+		def min_x; pos.x; end
+		def min_y; pos.y; end
+		def max_x; pos.x + size.x; end
+		def max_y; pos.y + size.y; end
+end
 
 GameState = DefStruct.new{{ 
 	alive: true,
@@ -40,7 +45,6 @@ class GameWindow < Gosu::Window
 		}
 
 		@state = GameState.new
-
 	end
 
 	def button_down(button)
@@ -63,8 +67,6 @@ class GameWindow < Gosu::Window
   		@state.scroll_x = 0
   	end
 
-  	
-
   	@state.player_vel += dt*GRAVITY
   	@state.player_pos += dt*@state.player_vel 
 
@@ -77,13 +79,26 @@ class GameWindow < Gosu::Window
   	@state.obstacles.each do |obst|
       obst.x -= dt*OBSTACLE_SPEED
     end
+  
+
+	  if player_is_colliding? 
+	  	@state.alive = false
+	  end
+	end
+
+  def player_is_colliding?
+  	player_r = player_rect    
+    obstacle_rects.find { |obst_r| rects_insterct?(player_r, obst_r) }
   end
 
-  if player_is_colliding? 
-  	@state.alive = false
-  end
+  def rects_insterct?(r1, r2)
+    return false if r1.max_x < r2.min_x
+    return false if r1.min_x > r2.max_x
 
-  def player_is_colliding
+    return false if r1.min_y > r2.max_y
+    return false if r1.max_y < r2.min_y
+
+    true
   end
 
 	def draw
@@ -99,14 +114,22 @@ class GameWindow < Gosu::Window
 			
 			# top jelly fish
       # @images[:obstacle].draw(obst.x,  obst.y - img_y, 0)
-      @images[:obstacle].draw(obst.x,  obst.y, 0)
-      # bottom jelly fish
+   #    @images[:obstacle].draw(obst.x,  obst.y, 0)
+   #    # bottom jelly fish
 
-      # @images[:obstacle].draw(obst.x, -height + img_y + (height + obst.y + OBSTACLE_GAP), 0)
-     	# scale(1, -1) do
-				# @images[:obstacle].draw(obst.x, -height + img_y + (height + obst.y + OBSTACLE_GAP), 0)
-					@images[:obstacle].draw(obst.x, -height  + (height + obst.y + OBSTACLE_GAP), 0)
-			# end
+   #    # @images[:obstacle].draw(obst.x, -height + img_y + (height + obst.y + OBSTACLE_GAP), 0)
+   #   	# scale(1, -1) do
+			# 	# @images[:obstacle].draw(obst.x, -height + img_y + (height + obst.y + OBSTACLE_GAP), 0)
+			# 		@images[:obstacle].draw(obst.x, -height  + (height + obst.y + OBSTACLE_GAP), 0)
+			# # end
+
+      img_y = @images[:obstacle].height 
+      # top log
+      @images[:obstacle].draw(obst.x, obst.y - img_y, 0)
+      scale(1, -1) do
+        # bottom log
+        @images[:obstacle].draw(obst.x, -height - img_y + (height - obst.y - OBSTACLE_GAP), 0)
+      end
 
     end
 	
@@ -115,33 +138,36 @@ class GameWindow < Gosu::Window
 		debug_draw
 	end
 
-	def debug_draw
-		player_rect = Rect.new(
+	def player_rect
+		Rect.new(
 			pos: @state.player_pos,
 			size: Vec[@images[:player].width, @images[:player].height]
 			)
-		draw_debug_rect(player_rect)
+		
+	end
 
+	def obstacle_rects
 		img_y = @images[:obstacle].height
-		@state.obstacles.each do |obst|
+		obst_size = Vec[@images[:obstacle].width, @images[:obstacle].height ]
 
-			top = Rect.new(
-				pos: Vec[obst.x, obst.y - img_y], 
-				size: Vec[@images[:obstacle].width, @images[:obstacle].height ]
-				)
-			draw_debug_rect(top)
+		@state.obstacles.flat_map do |obst|
+			top = Rect.new( pos: Vec[obst.x, obst.y - img_y], size: obst_size )
+			bottom = Rect.new( pos: Vec[obst.x, obst.y + OBSTACLE_GAP], size: obst_size )
+			[top, bottom]
+		end
+		# draw_debug_rect(bottom)
+	end
 
+	def debug_draw
+		color = player_is_colliding? ? Gosu::Color::RED : Gosu::Color::GREEN
 
-			bottom = Rect.new(
-				pos: Vec[obst.x, obst.y + OBSTACLE_GAP], 
-				size: Vec[@images[:obstacle].width, @images[:obstacle].height ]
-				)
-			draw_debug_rect(bottom)
+		draw_debug_rect(player_rect, color)
+		obstacle_rects.each do |obst_rect|
+			draw_debug_rect(obst_rect)
 		end
 	end
 
-	def draw_debug_rect(rect)
-		color = Gosu::Color::GREEN
+	def draw_debug_rect(rect, color = Gosu::Color::GREEN)
 		x = rect.pos.x
 		y = rect.pos.y
 		w = rect.size.x
