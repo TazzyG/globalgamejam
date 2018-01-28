@@ -271,16 +271,20 @@ class GameWindow < Gosu::Window
       0, @state.player_rotation,
       0, 0)
 
-    if @state.score == 8
+    if @state.score > 8
       @images[:fish_1].draw(-@state.scroll_x, 0, 0)
       @images[:fish_1].draw(-@state.scroll_x + @images[:fish_1].width, 0, 0)
     end
 
-    if @state.score > 2
+    if @state.score > 15
       @images[:trump].draw(1320, 920, 0)
     end
 
-    if @state.score > 4
+    if @state.score > 12
+      @images[:submarine].draw(820, 920, 0)
+    end
+
+    if @state.score > 20
       @images[:spaceship].draw(1320, 320, 0)
     end
 
